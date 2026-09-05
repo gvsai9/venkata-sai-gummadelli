@@ -1,0 +1,109 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+    const articles = await getCollection("writing");
+
+    return articles.map((article) => ({
+        params: {
+            slug: article.id,
+        },
+        props: {
+            article,
+        },
+    }));
+}
+
+const { article } = Astro.props;
+
+const { Content } = await render(article);
+
+const words = (article.body ?? "").split(/\s+/).length;
+const readingTime = Math.max(1, Math.ceil(words / 200));
+
+const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.data.title,
+    description: article.data.description,
+    datePublished: article.data.pubDate.toISOString(),
+    author: {
+        "@type": "Person",
+        name: "Venkata Sai Gummadelli",
+    },
+    keywords: article.data.tags?.join(", "),
+};
+---
+
+<BaseLayout
+    title={`${article.data.title} — Venkata Sai Gummadelli`}
+    description={article.data.description}
+    image={article.data.thumbnail?.src}
+    type="article"
+    publishedTime={article.data.pubDate}
+    schema={articleSchema}
+>
+
+    <article class="article-page">
+
+        <a class="article-back" href="/writing">
+            ← All writing
+        </a>
+
+        <header class="article-header">
+
+            <div class="article-kicker">
+                <span>{article.data.category}</span>
+                <span>Essay</span>
+            </div>
+
+            <h1>{article.data.title}</h1>
+
+            <p class="article-description">
+                {article.data.description}
+            </p>
+
+            <div class="article-meta">
+
+                <span>
+                    {article.data.pubDate.toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    })}
+                </span>
+
+                <span>·</span>
+
+                <span>{readingTime} min read</span>
+
+            </div>
+
+            {
+                article.data.tags && article.data.tags.length > 0 && (
+                    <div class="article-tags">
+                        {article.data.tags.map((tag) => (
+                            <span>{tag}</span>
+                        ))}
+                    </div>
+                )
+            }
+
+        </header>
+
+
+        <div class="article-body">
+            <Content />
+        </div>
+
+
+        <nav class="article-footer">
+            <a href="/writing">
+                ← Back to all writing
+            </a>
+        </nav>
+
+    </article>
+
+</BaseLayout>

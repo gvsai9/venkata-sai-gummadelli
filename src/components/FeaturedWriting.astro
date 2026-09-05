@@ -1,0 +1,74 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+
+const articles = await getCollection("writing");
+
+const sortedArticles = articles.sort(
+    (a, b) =>
+        b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const featuredArticle = sortedArticles[0];
+---
+
+{
+    featuredArticle && (
+        <section class="featured-writing">
+
+            <div class="section-label">
+                <span>01</span>
+                <span>FEATURED WRITING</span>
+            </div>
+
+            <article
+                class="featured-article"
+                class:list={[{ "has-thumbnail": !!featuredArticle.data.thumbnail }]}
+            >
+
+                <div class="article-number">
+                    01
+                </div>
+
+                {
+                    featuredArticle.data.thumbnail && (
+                        <div class="featured-article-thumbnail">
+                            <Image
+                                src={featuredArticle.data.thumbnail}
+                                alt={featuredArticle.data.thumbnailAlt ?? ""}
+                                width={360}
+                                height={270}
+                            />
+                        </div>
+                    )
+                }
+
+                <div class="article-content">
+
+                    <p class="article-category">
+                        {featuredArticle.data.category}
+                    </p>
+
+                    <h2>
+                        {featuredArticle.data.title}
+                    </h2>
+
+                    <p class="article-description">
+                        {featuredArticle.data.description}
+                    </p>
+
+                    <a href={`/writing/${featuredArticle.id}`}>
+                        Read article →
+                    </a>
+
+                </div>
+
+                <div class="article-year">
+                    {featuredArticle.data.pubDate.getFullYear()}
+                </div>
+
+            </article>
+
+        </section>
+    )
+}

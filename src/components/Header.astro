@@ -1,0 +1,140 @@
+---
+const path = Astro.url.pathname;
+
+const links = [
+    { href: "/", label: "Home" },
+    { href: "/writing", label: "Writing" },
+    { href: "/work", label: "Work" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+];
+
+function isActive(href: string) {
+    if (href === "/") return path === "/";
+    return path === href || path.startsWith(`${href}/`);
+}
+---
+
+<header class="site-header">
+    <a class="logo" href="/">VSG<span class="accent-dot">.</span></a>
+
+    <nav class="navigation" aria-label="Main navigation">
+        {
+            links.map((link) => (
+                <a
+                    href={link.href}
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                >
+                    {link.label}
+                </a>
+            ))
+        }
+
+        <button
+            id="theme-toggle"
+            class="theme-toggle"
+            type="button"
+            aria-pressed="false"
+            aria-label="Switch to dark theme"
+        >
+            <svg
+                class="icon-sun"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg
+                class="icon-moon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </nav>
+</header>
+
+<script>
+    const STORAGE_KEY = "theme";
+    const root = document.documentElement;
+    const toggle = document.getElementById("theme-toggle");
+
+    function systemTheme(): "light" | "dark" {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+    }
+
+    function currentTheme(): "light" | "dark" {
+        const explicit = root.getAttribute("data-theme");
+        return explicit === "dark" || explicit === "light"
+            ? explicit
+            : systemTheme();
+    }
+
+    const THEME_COLORS = { light: "#f7f6f2", dark: "#141312" };
+
+    function syncBrowserChrome(theme: "light" | "dark") {
+        // Mirrors the two static <meta name="theme-color" media="..."> tags
+        // in BaseLayout, but wins over them once the user picks explicitly.
+        let meta = document.querySelector(
+            'meta[name="theme-color"][data-dynamic]'
+        );
+        if (!meta) {
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "theme-color");
+            meta.setAttribute("data-dynamic", "");
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", THEME_COLORS[theme]);
+    }
+
+    function reflectState(theme: "light" | "dark") {
+        if (!toggle) return;
+        const isDark = theme === "dark";
+        toggle.setAttribute("aria-pressed", String(isDark));
+        toggle.setAttribute(
+            "aria-label",
+            isDark ? "Switch to light theme" : "Switch to dark theme"
+        );
+    }
+
+    const initialTheme = currentTheme();
+    reflectState(initialTheme);
+    if (root.getAttribute("data-theme")) {
+        syncBrowserChrome(initialTheme);
+    }
+
+    toggle?.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+
+        try {
+            localStorage.setItem(STORAGE_KEY, next);
+        } catch {
+            /* localStorage unavailable (private mode, disabled storage, etc.) */
+        }
+
+        reflectState(next);
+        syncBrowserChrome(next);
+    });
+</script>

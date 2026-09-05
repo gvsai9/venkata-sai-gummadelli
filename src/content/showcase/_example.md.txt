@@ -1,0 +1,26 @@
+This file is not picked up by the collection (it's *.md.txt, not *.md).
+It's just a copy-pasteable template for adding a new showcase item.
+
+Copy this into a new file named something like `my-new-item.md` in this
+same folder, fill it in, and it will automatically appear in the homepage
+Featured Showcase (sorted by `order`, then `date`, newest first).
+
+---
+title: "Your item's title"
+type: "achievement"   # one of: article | project | research | achievement | launch | update
+summary: "One short editorial sentence, ~90 characters or less."
+date: 2026-10-01       # optional
+href: "/writing/some-post"   # internal route or full external URL
+cta: "See the details"       # optional, defaults to something sensible per `type`
+order: 3                     # optional, lower numbers show first
+---
+
+# Optional image
+# To add a visual, drop an image file in src/assets/showcase/ and reference
+# it with a relative path, e.g.:
+#
+#   image: ../../assets/showcase/my-image.jpg
+#   imageAlt: "Describe the image for screen readers"
+#
+# If you skip `image`, the card automatically shows a typographic
+# placeholder instead, so it never looks broken or empty.

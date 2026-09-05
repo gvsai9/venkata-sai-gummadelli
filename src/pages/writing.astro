@@ -1,0 +1,87 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+
+const articles = await getCollection("writing");
+
+const sortedArticles = articles.sort(
+    (a, b) =>
+        b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout title="Writing — Venkata Sai Gummadelli">
+
+    <section class="writing-page">
+
+        <div class="section-label">
+            <span>WRITING</span>
+            <span>{articles.length} {articles.length === 1 ? "ARTICLE" : "ARTICLES"}</span>
+        </div>
+
+        <div class="writing-intro">
+            <h1>Ideas worth understanding.</h1>
+
+            <p>
+                I write about technology, artificial intelligence,
+                systems, and the ideas behind them.
+            </p>
+        </div>
+
+        <div class="article-list">
+
+            {
+                sortedArticles.map((article) => (
+                    <article class="article-item">
+
+                        <div class="article-rail">
+                            {article.data.thumbnail && (
+                                <div class="article-thumbnail">
+                                    <Image
+                                        src={article.data.thumbnail}
+                                        alt={article.data.thumbnailAlt ?? ""}
+                                        width={440}
+                                        height={330}
+                                    />
+                                </div>
+                            )}
+
+                            <div class="article-meta">
+                                <span>{article.data.category}</span>
+                                <span>
+                                    {article.data.pubDate.toLocaleDateString(
+                                        "en-US",
+                                        {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        }
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2>{article.data.title}</h2>
+
+                            <p>
+                                {article.data.description}
+                            </p>
+
+                            <a
+                                href={`/writing/${article.id}`}
+                            >
+                                Read article →
+                            </a>
+                        </div>
+
+                    </article>
+                ))
+            }
+
+        </div>
+
+    </section>
+
+</BaseLayout>

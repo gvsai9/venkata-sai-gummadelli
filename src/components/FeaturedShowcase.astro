@@ -1,0 +1,235 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+
+const entries = await getCollection("showcase");
+
+const TYPE_LABELS: Record<string, string> = {
+    article: "Article",
+    project: "Project",
+    research: "Research",
+    achievement: "Achievement",
+    launch: "Launch",
+    update: "Update",
+};
+
+const DEFAULT_CTA: Record<string, string> = {
+    article: "Read the article",
+    project: "View the project",
+    research: "See the research",
+    achievement: "Learn more",
+    launch: "See what's new",
+    update: "See the update",
+};
+
+const items = entries
+    .sort((a, b) => {
+        const orderA = a.data.order ?? Number.POSITIVE_INFINITY;
+        const orderB = b.data.order ?? Number.POSITIVE_INFINITY;
+        if (orderA !== orderB) return orderA - orderB;
+
+        const dateA = a.data.date?.valueOf() ?? 0;
+        const dateB = b.data.date?.valueOf() ?? 0;
+        return dateB - dateA;
+    })
+    .slice(0, 3);
+
+const isExternal = (href: string) => /^https?:\/\//i.test(href);
+---
+
+{
+    items.length > 0 && (
+        <div class="featured-showcase" data-featured-showcase>
+            <div class="section-label showcase-heading">
+                <span>Featured</span>
+                <span>
+                    {items.length === 1
+                        ? "1 update"
+                        : `${items.length} updates`}
+                </span>
+            </div>
+
+            <div class="showcase-track">
+                {items.map((item, index) => {
+                    const external = isExternal(item.data.href);
+                    const cta =
+                        item.data.cta ?? DEFAULT_CTA[item.data.type];
+
+                    return (
+                        <a
+                            id={`showcase-item-${index}`}
+                            class:list={["showcase-item", { "is-active": index === 0 }]}
+                            href={item.data.href}
+                            target={external ? "_blank" : undefined}
+                            rel={external ? "noopener noreferrer" : undefined}
+                        >
+                            <div class="showcase-visual">
+                                {item.data.image ? (
+                                    <Image
+                                        src={item.data.image}
+                                        alt={item.data.imageAlt ?? ""}
+                                        width={640}
+                                        height={360}
+                                    />
+                                ) : (
+                                    <span
+                                        class="showcase-placeholder"
+                                        aria-hidden="true"
+                                    >
+                                        {item.data.title.charAt(0)}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div class="showcase-body">
+                                <p class="showcase-kicker">
+                                    <span>{TYPE_LABELS[item.data.type]}</span>
+                                    {item.data.date && (
+                                        <span>
+                                            {item.data.date.toLocaleDateString(
+                                                "en-US",
+                                                {
+                                                    month: "short",
+                                                    year: "numeric",
+                                                }
+                                            )}
+                                        </span>
+                                    )}
+                                </p>
+
+                                <h3>{item.data.title}</h3>
+
+                                <p class="showcase-summary">
+                                    {item.data.summary}
+                                </p>
+
+                                <span class="showcase-cta">
+                                    {cta} →
+                                </span>
+                            </div>
+                        </a>
+                    );
+                })}
+            </div>
+
+            {items.length > 1 && (
+                <div class="showcase-indicators">
+                    {items.map((item, index) => (
+                        <button
+                            type="button"
+                            class:list={["showcase-tick", { "is-active": index === 0 }]}
+                            data-index={index}
+                            aria-current={index === 0 ? "true" : undefined}
+                            aria-controls={`showcase-item-${index}`}
+                            aria-label={`Show featured item ${index + 1} of ${items.length}: ${item.data.title}`}
+                        >
+                            <span class="showcase-tick-fill" />
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+<script>
+    const ROTATE_MS = 5500;
+
+    document
+        .querySelectorAll<HTMLElement>("[data-featured-showcase]")
+        .forEach((root) => {
+            const items = Array.from(
+                root.querySelectorAll<HTMLElement>(".showcase-item")
+            );
+            const ticks = Array.from(
+                root.querySelectorAll<HTMLElement>(".showcase-tick")
+            );
+
+            if (items.length < 2) return;
+
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            let activeIndex = Math.max(
+                0,
+                items.findIndex((el) => el.classList.contains("is-active"))
+            );
+            let timer: number | null = null;
+            let paused = false;
+
+            function show(index: number) {
+                const next = (index + items.length) % items.length;
+                if (next === activeIndex) return;
+
+                items[activeIndex]?.classList.remove("is-active");
+                ticks[activeIndex]?.classList.remove("is-active");
+                ticks[activeIndex]?.removeAttribute("aria-current");
+
+                activeIndex = next;
+
+                items[activeIndex]?.classList.add("is-active");
+                const tick = ticks[activeIndex];
+                if (tick) {
+                    tick.classList.add("is-active");
+                    tick.setAttribute("aria-current", "true");
+
+                    // Restart the CSS fill animation from zero every time.
+                    const fill = tick.querySelector<HTMLElement>(
+                        ".showcase-tick-fill"
+                    );
+                    if (fill) {
+                        fill.style.animation = "none";
+                        void fill.offsetWidth; // force reflow
+                        fill.style.animation = "";
+                    }
+                }
+            }
+
+            function stop() {
+                if (timer !== null) {
+                    window.clearInterval(timer);
+                    timer = null;
+                }
+            }
+
+            function start() {
+                if (reduceMotion || paused) return;
+                stop();
+                timer = window.setInterval(
+                    () => show(activeIndex + 1),
+                    ROTATE_MS
+                );
+            }
+
+            function pause() {
+                paused = true;
+                stop();
+            }
+
+            function resume() {
+                paused = false;
+                start();
+            }
+
+            ticks.forEach((tick, index) => {
+                tick.addEventListener("click", () => {
+                    show(index);
+                    // Only actually resumes if the pointer/focus has
+                    // already left the component (see pause()/resume()).
+                    start();
+                });
+            });
+
+            root.addEventListener("mouseenter", pause);
+            root.addEventListener("mouseleave", resume);
+            root.addEventListener("focusin", pause);
+            root.addEventListener("focusout", (event) => {
+                const next = (event as FocusEvent)
+                    .relatedTarget as Node | null;
+                if (!next || !root.contains(next)) resume();
+            });
+
+            start();
+        });
+</script>

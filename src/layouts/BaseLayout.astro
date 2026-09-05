@@ -1,0 +1,213 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+interface Props {
+    title: string;
+    description?: string;
+    image?: string;
+    type?: "website" | "article";
+    publishedTime?: Date;
+    schema?: Record<string, unknown>;
+}
+
+const {
+    title,
+    description = "Venkata Sai Gummadelli — writing, ideas, technology, and things worth understanding.",
+    image = "/og-image.png",
+    type = "website",
+    publishedTime,
+    schema,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const imageURL = new URL(image, Astro.site);
+
+const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Venkata Sai Gummadelli",
+    url: Astro.site?.toString(),
+    description:
+        "Venkata Sai Gummadelli writes about artificial intelligence, technology, and systems worth understanding.",
+    sameAs: [
+        "https://www.linkedin.com/in/venkata-sai-gummadelli/",
+        "https://medium.com/@gummadellivenkatsai",
+    ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="UTF-8" />
+
+        <!--
+            Anti-flash theme init: must run before the stylesheet applies.
+            Reads the user's stored choice (if any) and reflects it as
+            data-theme on <html> synchronously, so the very first paint
+            already matches. No stored choice = no attribute = the CSS
+            `prefers-color-scheme` fallback in global.css takes over.
+        -->
+        <script is:inline>
+            (function () {
+                try {
+                    var stored = localStorage.getItem("theme");
+                    if (stored === "dark" || stored === "light") {
+                        document.documentElement.setAttribute(
+                            "data-theme",
+                            stored
+                        );
+                    }
+                } catch (e) {
+                    /* localStorage unavailable — system preference will apply */
+                }
+            })();
+        </script>
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+
+        <meta
+            name="description"
+            content={description}
+        />
+
+        <meta
+            name="author"
+            content="Venkata Sai Gummadelli"
+        />
+
+        <meta
+            name="theme-color"
+            content="#f7f6f2"
+            media="(prefers-color-scheme: light)"
+        />
+
+        <meta
+            name="theme-color"
+            content="#141312"
+            media="(prefers-color-scheme: dark)"
+        />
+
+        <link
+            rel="canonical"
+            href={canonicalURL}
+        />
+
+        <!-- Open Graph -->
+
+        <meta
+            property="og:title"
+            content={title}
+        />
+
+        <meta
+            property="og:description"
+            content={description}
+        />
+
+        <meta
+            property="og:type"
+            content={type}
+        />
+
+        <meta
+            property="og:url"
+            content={canonicalURL}
+        />
+
+        <meta
+            property="og:site_name"
+            content="Venkata Sai Gummadelli"
+        />
+
+        <meta
+            property="og:image"
+            content={imageURL}
+        />
+
+        <meta
+            property="og:image:alt"
+            content="Venkata Sai Gummadelli"
+        />
+
+        {
+            type === "article" && publishedTime && (
+                <meta
+                    property="article:published_time"
+                    content={publishedTime.toISOString()}
+                />
+            )
+        }
+
+        <!-- Twitter / X -->
+
+        <meta
+            name="twitter:card"
+            content="summary_large_image"
+        />
+
+        <meta
+            name="twitter:title"
+            content={title}
+        />
+
+        <meta
+            name="twitter:description"
+            content={description}
+        />
+
+        <meta
+            name="twitter:image"
+            content={imageURL}
+        />
+
+        <!-- Favicon -->
+
+        <link
+            rel="icon"
+            type="image/svg+xml"
+            href="/favicon.svg"
+        />
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="/favicon.ico"
+        />
+
+        <!-- Structured data -->
+
+        <script type="application/ld+json" set:html={JSON.stringify(personSchema)} is:inline />
+
+        {
+            schema && (
+                <script type="application/ld+json" set:html={JSON.stringify(schema)} is:inline />
+            )
+        }
+
+        <title>{title}</title>
+
+    </head>
+
+    <body>
+
+        <a class="skip-link" href="#main-content">Skip to content</a>
+
+        <Header />
+
+        <main id="main-content">
+            <slot />
+        </main>
+
+        <Footer />
+
+    </body>
+
+</html>

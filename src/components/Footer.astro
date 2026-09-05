@@ -1,0 +1,57 @@
+---
+const path = Astro.url.pathname;
+
+const links = [
+    { href: "/writing", label: "Writing" },
+    { href: "/work", label: "Work" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+];
+
+function isActive(href: string) {
+    return path === href || path.startsWith(`${href}/`);
+}
+---
+
+<footer class="site-footer">
+
+    <div class="footer-top">
+
+        <div class="footer-brand">
+            <a href="/">VSG<span class="accent-dot">.</span></a>
+
+            <p>
+                Learning, building, and writing<br />
+                about ideas worth understanding.
+            </p>
+        </div>
+
+        <nav class="footer-navigation" aria-label="Footer navigation">
+            {
+                links.map((link) => (
+                    <a
+                        href={link.href}
+                        aria-current={isActive(link.href) ? "page" : undefined}
+                    >
+                        {link.label}
+                    </a>
+                ))
+            }
+        </nav>
+
+    </div>
+
+
+    <div class="footer-bottom">
+
+        <span>
+            © {new Date().getFullYear()} Venkata Sai Gummadelli
+        </span>
+
+        <a href="/" class="footer-mark" aria-label="VSG — back to home">
+            <img src="/favicon.svg" alt="" width="20" height="20" />
+        </a>
+
+    </div>
+
+</footer>
