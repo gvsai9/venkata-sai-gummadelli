@@ -6,6 +6,6 @@ date: 2026-10-18
 href: "/writing/GPU-Part-1"
 cta: "Read the article"
 order: 2
-image: ../../assets/writings/gpu.png
+image: ../../assets/writing/gpu.png
 imageAlt: "Description of the image"
 ---
